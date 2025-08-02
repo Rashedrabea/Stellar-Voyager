@@ -39,9 +39,23 @@ const victoryLevelElement = document.getElementById('victory-level');
 const defeatScoreElement = document.getElementById('defeat-score');
 const defeatLevelElement = document.getElementById('defeat-level');
 
-// إعداد اللعبة
-canvas.width = 800;
-canvas.height = 600;
+// إعداد اللعبة - متجاوب
+function resizeCanvas() {
+    if (window.innerWidth <= 768) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - 120;
+    } else {
+        canvas.width = 800;
+        canvas.height = 600;
+    }
+    
+    // إعادة تعيين موقع الطائرة
+    spaceship.x = canvas.width / 2 - 25;
+    spaceship.y = canvas.height - 100;
+}
+
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 // Copyright Protection System
 (function() {
@@ -305,7 +319,73 @@ statsBackBtn.addEventListener('click', backToMenu);
 achievementsBackBtn.addEventListener('click', backToMenu);
 shareBtn.addEventListener('click', shareScore);
 
+// أزرار التحكم باللمس للموبايل
+const mobileControls = document.getElementById('mobile-controls');
+const upBtn = document.getElementById('up-btn');
+const downBtn = document.getElementById('down-btn');
+const leftBtn = document.getElementById('left-btn');
+const rightBtn = document.getElementById('right-btn');
+const fireBtn = document.getElementById('fire-btn');
+const pauseBtn = document.getElementById('pause-btn');
 
+// أحداث اللمس
+if (upBtn) {
+    upBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!gamePaused) spaceship.movingUp = true;
+    });
+    upBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        spaceship.movingUp = false;
+    });
+}
+
+if (downBtn) {
+    downBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!gamePaused) spaceship.movingDown = true;
+    });
+    downBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        spaceship.movingDown = false;
+    });
+}
+
+if (leftBtn) {
+    leftBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!gamePaused) spaceship.movingLeft = true;
+    });
+    leftBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        spaceship.movingLeft = false;
+    });
+}
+
+if (rightBtn) {
+    rightBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!gamePaused) spaceship.movingRight = true;
+    });
+    rightBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        spaceship.movingRight = false;
+    });
+}
+
+if (fireBtn) {
+    fireBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!gamePaused) shootBullet();
+    });
+}
+
+if (pauseBtn) {
+    pauseBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        togglePause();
+    });
+}
 
 // تحميل الإحصائيات والإنجازات
 loadStats();
@@ -364,6 +444,11 @@ function startGame() {
     
     hideAllScreens();
     gameScreen.style.display = 'block';
+    
+    // إظهار أزرار التحكم على الموبايل
+    if (window.innerWidth <= 768 && mobileControls) {
+        mobileControls.style.display = 'flex';
+    }
     
 
     
@@ -1638,7 +1723,10 @@ function backToMenu() {
     statsScreen.style.display = 'none';
     achievementsScreen.style.display = 'none';
     
-
+    // إخفاء أزرار التحكم
+    if (mobileControls) {
+        mobileControls.style.display = 'none';
+    }
 }
 
 // نظام الكومبو
