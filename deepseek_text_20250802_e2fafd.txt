@@ -1,0 +1,12 @@
+├── index.html
+├── css/
+│   └── style.css
+├── js/
+│   └── game.js
+├── images/
+│   ├── spaceship.png
+│   ├── asteroid.png
+│   └── star.png
+└── sounds/
+    ├── explosion.mp3
+    └── collect.mp3

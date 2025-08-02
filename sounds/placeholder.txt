@@ -1,0 +1,11 @@
+# ملفات الأصوات
+# ضع ملفات الصوت هنا:
+# - explosion-42132.mp3
+# - aylex-i-can-fly.mp3  
+# - escp-neon-metaphor.mp3
+# - large-explosion-100420.mp3
+
+# يمكن تحميل أصوات مجانية من:
+# - freesound.org
+# - zapsplat.com
+# - pixabay.com

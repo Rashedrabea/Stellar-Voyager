@@ -1,0 +1,27 @@
+{
+  "name": "المستكشف الفضائي",
+  "short_name": "المستكشف الفضائي",
+  "description": "لعبة فضائية مجانية باللغة العربية",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a1a",
+  "theme_color": "#3498db",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "images/icon-16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "images/icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "images/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

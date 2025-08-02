@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المستكشف الفضائي - لعبة فضائية مجانية ممتعة للأطفال والكبار</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="لعبة المستكشف الفضائي - لعبة فضائية مجانية ممتعة باللغة العربية. تجنب الكويكبات والكواكب وحارب الطائرات المعادية في 100 مرحلة مختلفة">
+    <meta name="keywords" content="لعبة فضائية, لعبة مجانية, لعبة عربية, لعبة أطفال, لعبة إطلاق نار, لعبة طائرات, لعبة مغامرات, space game, arabic game">
+    <meta name="author" content="المستكشف الفضائي">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Arabic">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="المستكشف الفضائي - لعبة فضائية مجانية">
+    <meta property="og:description" content="لعبة فضائية ممتعة باللغة العربية مع 100 مرحلة مختلفة وتأثيرات بصرية رائعة">
+    <meta property="og:type" content="game">
+    <meta property="og:locale" content="ar_AR">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="المستكشف الفضائي">
+    <meta name="twitter:description" content="لعبة فضائية مجانية بالعربية">
+    
+    <!-- Copyright Protection -->
+    <meta name="copyright" content="جميع الحقوق محفوظة 2024">
+    <meta name="generator" content="المستكشف الفضائي Game Engine">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/icon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+    <meta name="theme-color" content="#3498db">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Game",
+        "name": "المستكشف الفضائي",
+        "description": "لعبة فضائية مجانية باللغة العربية",
+        "genre": "Action, Adventure, Arcade",
+        "playMode": "SinglePlayer",
+        "inLanguage": "ar",
+        "operatingSystem": "Web Browser",
+        "applicationCategory": "Game",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+</head>
+<body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
+    <div class="game-container">
+        <div class="start-screen">
+            <h1>المستكشف الفضائي</h1>
+            <p>تجنب الكويكبات والكواكب والطائرات المعادية!</p>
+            <p>جمع النجوم ودمر الأعداء لتحقيق أعلى نقاط!</p>
+            <p>الأسهم للحركة - مسافة للإطلاق - P للإيقاف</p>
+            
+
+
+            <button id="start-btn">ابدأ اللعبة</button>
+            <button id="stats-btn">الإحصائيات</button>
+            <button id="achievements-btn">الإنجازات</button>
+        </div>
+        
+        <div class="game-screen">
+            <canvas id="game-canvas"></canvas>
+        </div>
+        
+        <div class="game-stats">
+            <div>النقاط: <span id="score">0</span></div>
+            <div>الوقود: <span id="fuel">100</span>%</div>
+            <div>الحياة: <span id="lives">3</span></div>
+            <div>الدرع: <span id="shield">0</span></div>
+            <div>المستوى: <span id="level">1</span></div>
+            <div>أعلى نقاط: <span id="high-score">0</span></div>
+        </div>
+        
+
+        
+        <div class="combo-display" id="combo-display">
+            <div class="combo-text">كومبو x<span id="combo-count">0</span></div>
+        </div>
+        
+        <div class="achievements-panel" id="achievements-panel">
+            <div class="achievement-notification" id="achievement-notification"></div>
+        </div>
+        
+        
+        <div class="game-controls">
+            <button id="quit-btn">إيقاف اللعبة</button>
+        </div>
+        
+        <div class="game-over">
+            <h2>انتهت اللعبة!</h2>
+            <p>نقاطك: <span id="final-score">0</span></p>
+            <p>المستوى المكتمل: <span id="final-level">1</span></p>
+            <button id="restart-btn">اللعب مرة أخرى</button>
+        </div>
+        
+        <div class="pause-screen">
+            <h2>اللعبة متوقفة</h2>
+            <p>اضغط P للمتابعة</p>
+        </div>
+        
+        <div class="victory-screen">
+            <h2>🎉 مبروك! فزت! 🎉</h2>
+            <p>وصلت للمستوى <span id="victory-level">100</span></p>
+            <p>نقاطك النهائية: <span id="victory-score">0</span></p>
+            <button id="victory-restart-btn">لعب مرة أخرى</button>
+            <button id="victory-menu-btn">القائمة الرئيسية</button>
+        </div>
+        
+        <div class="defeat-screen">
+            <h2>😢 هزيمة! 😢</h2>
+            <p>لقد فقدت جميع أرواحك</p>
+            <p>نقاطك: <span id="defeat-score">0</span></p>
+            <p>المستوى المكتمل: <span id="defeat-level">1</span></p>
+            <p>أعلى كومبو: <span id="defeat-combo">0</span></p>
+            <button id="defeat-restart-btn">حاول مرة أخرى</button>
+            <button id="defeat-menu-btn">القائمة الرئيسية</button>
+            <button id="share-btn">مشاركة النتيجة</button>
+        </div>
+        
+        <div class="stats-screen">
+            <h2>📊 الإحصائيات</h2>
+            <div class="stats-grid">
+                <div>وقت اللعب: <span id="total-time">0</span> دقيقة</div>
+                <div>الأعداء المدمرين: <span id="enemies-killed">0</span></div>
+                <div>أطول بقاء: <span id="longest-survival">0</span> ثانية</div>
+                <div>أعلى كومبو: <span id="best-combo">0</span></div>
+                <div>عدد اللعبات: <span id="games-played">0</span></div>
+                <div>النجوم المجمعة: <span id="stars-collected">0</span></div>
+            </div>
+            <button id="stats-back-btn">عودة</button>
+        </div>
+        
+        <div class="achievements-screen">
+            <h2>🏆 الإنجازات</h2>
+            <div class="achievements-grid" id="achievements-grid"></div>
+            <button id="achievements-back-btn">عودة</button>
+        </div>
+    </div>
+    
+    <footer class="copyright-footer">
+        <div class="copyright-text">
+            <p>&copy; 2024 المستكشف الفضائي - جميع الحقوق محفوظة</p>
+            <p>محمي بحقوق الطبع والنشر والملكية الفكرية</p>
+        </div>
+    </footer>
+
+    <script src="js/game.js"></script>
+</body>
+</html>
