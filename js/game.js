@@ -49,61 +49,24 @@ function adjustCanvasSize() {
         const container = document.querySelector('.game-screen');
         if (container) {
             canvas.style.width = '100%';
-            canvas.style.height = 'calc(100vh - 120px)'; // مساحة أكبر للموبايل
+            canvas.style.height = 'calc(100vh - 200px)';
         }
-        // تحديث سرعة الطائرة للموبايل
-        spaceship.speed = 10;
     } else {
         canvas.style.width = '800px';
         canvas.style.height = '600px';
-        spaceship.speed = 5;
-    }
-    
-    // تحسين جودة الرسم للموبايل
-    if (window.devicePixelRatio > 1) {
-        const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width * window.devicePixelRatio;
-        canvas.height = rect.height * window.devicePixelRatio;
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
 }
 
 adjustCanvasSize();
 window.addEventListener('resize', adjustCanvasSize);
 
-// Copyright Protection System
+// Copyright Protection System - Simplified
 (function() {
     'use strict';
     
-    // Disable Developer Tools
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'F12' || 
-            (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-            (e.ctrlKey && e.shiftKey && e.key === 'C') ||
-            (e.ctrlKey && e.key === 'u') ||
-            (e.ctrlKey && e.key === 's') ||
-            (e.ctrlKey && e.key === 'p')) {
-            e.preventDefault();
-            alert('هذه اللعبة محمية بحقوق الطبع والنشر!');
-            return false;
-        }
-    });
-    
-    // Disable text selection
-    document.onselectstart = function() { return false; };
-    document.onmousedown = function() { return false; };
-    
-    // Console warning
-    console.log('%cتحذير!', 'color: red; font-size: 50px; font-weight: bold;');
-    console.log('%cهذه اللعبة محمية بحقوق الطبع والنشر', 'color: red; font-size: 20px;');
-    console.log('%cأي محاولة لنسخ أو سرقة الكود مخالفة للقانون', 'color: orange; font-size: 16px;');
-    
-    // Anti-debugging
-    setInterval(function() {
-        if (window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
-            document.body.innerHTML = '<h1 style="color:red;text-align:center;margin-top:200px;">تم اكتشاف محاولة غير مشروعة للوصول للكود!</h1>';
-        }
-    }, 1000);
+    // Console warning only
+    console.log('%cتحذير!', 'color: red; font-size: 20px; font-weight: bold;');
+    console.log('%cهذه اللعبة محمية بحقوق الطبع والنشر', 'color: red; font-size: 16px;');
 })();
 
 // Game Copyright Info
@@ -115,21 +78,34 @@ const GAME_INFO = {
     license: 'Proprietary - ملكية خاصة'
 };
 
-// الأصوات
-const sounds = {
-    explosion: new Audio('sounds/explosion-42132.mp3'),
-    collect: new Audio('sounds/aylex-i-can-fly.mp3'),
-    background: new Audio('sounds/escp-neon-metaphor.mp3'),
-    shoot: new Audio('sounds/large-explosion-100420.mp3')
-};
-
-// تقليل مستوى الصوت
-Object.values(sounds).forEach(sound => {
-    sound.volume = 0.3;
-});
-
-sounds.background.loop = true;
-sounds.background.volume = 0.1;
+// الأصوات - مع معالجة الأخطاء
+let sounds = {};
+try {
+    sounds = {
+        explosion: new Audio('sounds/explosion-42132.mp3'),
+        collect: new Audio('sounds/aylex-i-can-fly.mp3'),
+        background: new Audio('sounds/escp-neon-metaphor.mp3'),
+        shoot: new Audio('sounds/large-explosion-100420.mp3')
+    };
+    
+    // تقليل مستوى الصوت
+    Object.values(sounds).forEach(sound => {
+        sound.volume = 0.3;
+        sound.onerror = () => console.log('فشل تحميل الصوت');
+    });
+    
+    sounds.background.loop = true;
+    sounds.background.volume = 0.1;
+} catch (error) {
+    console.log('فشل تحميل الأصوات:', error);
+    // أصوات وهمية لتجنب الأخطاء
+    sounds = {
+        explosion: { play: () => {}, currentTime: 0 },
+        collect: { play: () => {}, currentTime: 0 },
+        background: { play: () => {}, pause: () => {}, currentTime: 0 },
+        shoot: { play: () => {}, currentTime: 0, volume: 0.1 }
+    };
+}
 
 // متغيرات اللعبة
 let gameRunning = false;
@@ -262,7 +238,7 @@ const spaceship = {
     y: 500,
     width: 50,
     height: 50,
-    speed: window.innerWidth <= 768 ? 8 : 5, // سرعة أعلى للموبايل
+    speed: 5,
     color: '#3498db',
     movingLeft: false,
     movingRight: false,
@@ -325,19 +301,23 @@ window.addEventListener('keyup', (e) => {
     }
 });
 
-// بدء اللعبة
-startBtn.addEventListener('click', startGame);
-restartBtn.addEventListener('click', startGame);
-quitBtn.addEventListener('click', quitGame);
-victoryRestartBtn.addEventListener('click', startGame);
-victoryMenuBtn.addEventListener('click', backToMenu);
-defeatRestartBtn.addEventListener('click', startGame);
-defeatMenuBtn.addEventListener('click', backToMenu);
-statsBtn.addEventListener('click', showStats);
-achievementsBtn.addEventListener('click', showAchievements);
-statsBackBtn.addEventListener('click', backToMenu);
-achievementsBackBtn.addEventListener('click', backToMenu);
-shareBtn.addEventListener('click', shareScore);
+// بدء اللعبة - مع معالجة الأخطاء
+try {
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+    quitBtn.addEventListener('click', quitGame);
+    victoryRestartBtn.addEventListener('click', startGame);
+    victoryMenuBtn.addEventListener('click', backToMenu);
+    defeatRestartBtn.addEventListener('click', startGame);
+    defeatMenuBtn.addEventListener('click', backToMenu);
+    statsBtn.addEventListener('click', showStats);
+    achievementsBtn.addEventListener('click', showAchievements);
+    statsBackBtn.addEventListener('click', backToMenu);
+    achievementsBackBtn.addEventListener('click', backToMenu);
+    shareBtn.addEventListener('click', shareScore);
+} catch (error) {
+    console.error('خطأ في إعداد الأحداث:', error);
+}
 
 // تحكم باللمس المباشر
 let touchOverlay, mobileUI, pauseBtn;
@@ -345,11 +325,15 @@ let isTouching = false;
 let touchStartTime = 0;
 
 window.addEventListener('DOMContentLoaded', function() {
-    touchOverlay = document.getElementById('touch-overlay');
-    mobileUI = document.getElementById('mobile-ui');
-    pauseBtn = document.getElementById('pause-btn');
-    
-    setupTouchControls();
+    try {
+        touchOverlay = document.getElementById('touch-overlay');
+        mobileUI = document.getElementById('mobile-ui');
+        pauseBtn = document.getElementById('pause-btn');
+        
+        setupTouchControls();
+    } catch (error) {
+        console.error('خطأ في إعداد اللعبة:', error);
+    }
 });
 
 function setupTouchControls() {
@@ -391,13 +375,7 @@ function handleTouchMove(e) {
     const touchX = touch.clientX - rect.left;
     const touchY = touch.clientY - rect.top;
     
-    // تحسين الاستجابة للموبايل
     moveSpaceshipToTouch(touchX, touchY);
-    
-    // تحديث فوري للحركة
-    if (window.innerWidth <= 768) {
-        spaceship.speed = 12; // سرعة عالية للموبايل
-    }
 }
 
 function handleTouchEnd(e) {
@@ -406,8 +384,7 @@ function handleTouchEnd(e) {
     
     const touchDuration = Date.now() - touchStartTime;
     
-    // إطلاق عند اللمس السريع (أقل من 300 ملي ثانية)
-    if (touchDuration < 300 && !gamePaused && gameRunning) {
+    if (touchDuration < 200 && !gamePaused && gameRunning) {
         shootBullet();
     }
     
@@ -416,11 +393,6 @@ function handleTouchEnd(e) {
     spaceship.movingRight = false;
     spaceship.movingUp = false;
     spaceship.movingDown = false;
-    
-    // إعادة تعيين السرعة العادية
-    if (window.innerWidth <= 768) {
-        spaceship.speed = 8;
-    }
 }
 
 function moveSpaceshipToTouch(touchX, touchY) {
@@ -434,9 +406,8 @@ function moveSpaceshipToTouch(touchX, touchY) {
     const deltaX = scaledX - spaceshipCenterX;
     const deltaY = scaledY - spaceshipCenterY;
     
-    const threshold = 15; // تقليل العتبة لحساسية أفضل
+    const threshold = 20;
     
-    // تحسين الحركة للموبايل - حركة مباشرة وسريعة
     if (Math.abs(deltaX) > threshold) {
         spaceship.movingLeft = deltaX < 0;
         spaceship.movingRight = deltaX > 0;
@@ -452,9 +423,6 @@ function moveSpaceshipToTouch(touchX, touchY) {
         spaceship.movingUp = false;
         spaceship.movingDown = false;
     }
-    
-    // تحديث سرعة الطائرة للموبايل
-    spaceship.speed = window.innerWidth <= 768 ? 10 : 5;
 }
 
 // تحميل الإحصائيات والإنجازات
@@ -510,7 +478,9 @@ function startGame() {
     createBackgroundStars();
     
     // تشغيل الموسيقى الخلفية
-    sounds.background.play().catch(() => {});
+    if (!muted) {
+        sounds.background.play().catch(() => {});
+    }
     
     hideAllScreens();
     gameScreen.style.display = 'block';
@@ -556,8 +526,8 @@ function togglePause() {
 
 function update(deltaTime) {
     try {
-    // تحريك المركبة الفضائية - تحسين للموبايل
-    const currentSpeed = window.innerWidth <= 768 ? 10 : spaceship.speed;
+    // تحريك المركبة الفضائية
+    const currentSpeed = window.innerWidth <= 768 ? 8 : spaceship.speed;
     
     if (spaceship.movingLeft && spaceship.x > 0) {
         spaceship.x -= currentSpeed;
@@ -692,8 +662,10 @@ function update(deltaTime) {
             score += 10 * level;
             gameStats.starsCollected++;
             fuel = Math.min(100, fuel + 15);
-            sounds.collect.currentTime = 0;
-            sounds.collect.play().catch(() => {});
+            if (!muted) {
+                sounds.collect.currentTime = 0;
+                sounds.collect.play().catch(() => {});
+            }
             
             // زيادة المستوى كل 1500 نقطة (مراحل أطول وأكثر إثارة)
             if (score >= level * 1500) {
@@ -735,8 +707,10 @@ function update(deltaTime) {
         // التحقق من جمع القوى الخاصة
         if (checkCollision(spaceship, powerUps[i])) {
             applyPowerUp(powerUps[i].type);
-            sounds.collect.currentTime = 0;
-            sounds.collect.play().catch(() => {});
+            if (!muted) {
+                sounds.collect.currentTime = 0;
+                sounds.collect.play().catch(() => {});
+            }
             powerUps.splice(i, 1);
             continue;
         }
@@ -960,6 +934,102 @@ function drawWeaponIndicators() {
     }
 }
 
+// دالة رسم النجمة
+function drawStar(ctx, x, y, radius, color) {
+    const spikes = 5;
+    const outerRadius = radius;
+    const innerRadius = radius * 0.4;
+    
+    ctx.save();
+    ctx.translate(x, y);
+    
+    // تأثير بريق
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+    
+    ctx.beginPath();
+    for (let i = 0; i < spikes * 2; i++) {
+        const angle = (i * Math.PI) / spikes;
+        const r = i % 2 === 0 ? outerRadius : innerRadius;
+        const px = Math.cos(angle) * r;
+        const py = Math.sin(angle) * r;
+        
+        if (i === 0) {
+            ctx.moveTo(px, py);
+        } else {
+            ctx.lineTo(px, py);
+        }
+    }
+    ctx.closePath();
+    
+    // تدرج لوني
+    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, outerRadius);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(0.5, color);
+    gradient.addColorStop(1, color);
+    
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    ctx.shadowBlur = 0;
+    ctx.restore();
+}
+
+// دالة رسم النيزك (الكويكب)
+function drawAsteroid(ctx, x, y, radius, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    
+    // شكل غير منتظم للنيزك
+    const points = 8;
+    const irregularity = 0.3;
+    
+    ctx.beginPath();
+    for (let i = 0; i <= points; i++) {
+        const angle = (i / points) * Math.PI * 2;
+        const variation = 1 + (Math.sin(angle * 3) * irregularity);
+        const r = radius * variation;
+        const px = Math.cos(angle) * r;
+        const py = Math.sin(angle) * r;
+        
+        if (i === 0) {
+            ctx.moveTo(px, py);
+        } else {
+            ctx.lineTo(px, py);
+        }
+    }
+    ctx.closePath();
+    
+    // تدرج لوني للنيزك
+    const gradient = ctx.createRadialGradient(-radius/3, -radius/3, 0, 0, 0, radius);
+    gradient.addColorStop(0, '#888888');
+    gradient.addColorStop(0.4, color);
+    gradient.addColorStop(0.8, '#333333');
+    gradient.addColorStop(1, '#111111');
+    
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // فوهات على سطح النيزك
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    for (let i = 0; i < 3; i++) {
+        const craterX = (Math.random() - 0.5) * radius;
+        const craterY = (Math.random() - 0.5) * radius;
+        const craterSize = radius * (0.1 + Math.random() * 0.2);
+        
+        ctx.beginPath();
+        ctx.arc(craterX, craterY, craterSize, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // حدود مضيئة
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    ctx.restore();
+}
+
 function render() {
     // مسح الشاشة بلون المرحلة
     const stage = getStage(currentStage);
@@ -981,74 +1051,15 @@ function render() {
     
     drawSpaceship();
     
-    // رسم الكويكبات بلون المرحلة مع تأثير 3D
+    // رسم الكويكبات (النيازك) بشكل واقعي
     asteroids.forEach(asteroid => {
-        // تدرج لوني للتأثير 3D
-        const asteroidGradient = ctx.createRadialGradient(
-            asteroid.x - asteroid.radius/3, asteroid.y - asteroid.radius/3, 0,
-            asteroid.x, asteroid.y, asteroid.radius
-        );
-        asteroidGradient.addColorStop(0, 'rgba(255,255,255,0.8)');
-        asteroidGradient.addColorStop(0.3, stage.asteroidColor);
-        asteroidGradient.addColorStop(1, 'rgba(0,0,0,0.5)');
-        
-        ctx.fillStyle = asteroidGradient;
-        ctx.beginPath();
-        ctx.arc(asteroid.x, asteroid.y, asteroid.radius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // ظل الكويكب
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath();
-        ctx.arc(asteroid.x + 2, asteroid.y + 2, asteroid.radius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // حدود مضيئة
-        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(asteroid.x, asteroid.y, asteroid.radius, 0, Math.PI * 2);
-        ctx.stroke();
+        drawAsteroid(ctx, asteroid.x, asteroid.y, asteroid.radius, stage.asteroidColor);
     });
     
-    // رسم النجوم بلون المرحلة مع تأثير 3D
+    // رسم النجوم بشكل نجمة
+    ctx.fillStyle = stage.starColor;
     stars.forEach(star => {
-        // تدرج لوني للنجمة
-        const starGradient = ctx.createRadialGradient(
-            star.x, star.y, 0,
-            star.x, star.y, star.radius * 2
-        );
-        starGradient.addColorStop(0, '#ffffff');
-        starGradient.addColorStop(0.5, stage.starColor);
-        starGradient.addColorStop(1, 'rgba(0,0,0,0)');
-        
-        ctx.fillStyle = starGradient;
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // تأثير بريق محسن
-        ctx.shadowColor = stage.starColor;
-        ctx.shadowBlur = 15;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius/2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        
-        // نجمة متألقة
-        ctx.strokeStyle = stage.starColor;
-        ctx.lineWidth = 1;
-        for (let i = 0; i < 8; i++) {
-            const angle = (i * Math.PI) / 4;
-            ctx.beginPath();
-            ctx.moveTo(star.x, star.y);
-            ctx.lineTo(
-                star.x + Math.cos(angle) * star.radius * 1.5,
-                star.y + Math.sin(angle) * star.radius * 1.5
-            );
-            ctx.stroke();
-        }
+        drawStar(ctx, star.x, star.y, star.radius, stage.starColor);
     });
     
     // رسم القوى الخاصة مع تأثير نبض
@@ -1386,10 +1397,6 @@ function drawSpaceship() {
         createThrustParticles();
     }
     
-    // تأثير 3D بسيط - ظلال
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.fillRect(x + 3, y + h + 2, w, 8); // ظل الطائرة
-    
     // تأثير الوضع المحسن
     if (superMode) {
         // هالة مضيئة حول الطائرة
@@ -1401,38 +1408,27 @@ function drawSpaceship() {
         ctx.shadowBlur = 0;
     }
     
-    // رسم جسم الطائرة بتدرج لوني مع تأثير 3D
-    const gradient = ctx.createLinearGradient(x, y, x + w, y + h);
+    // رسم جسم الطائرة بتدرج لوني
+    const gradient = ctx.createLinearGradient(x, y, x, y + h);
     if (superMode) {
-        gradient.addColorStop(0, '#ff80ff');
-        gradient.addColorStop(0.3, '#ff00ff');
-        gradient.addColorStop(0.7, '#8000ff');
+        gradient.addColorStop(0, '#ff00ff');
+        gradient.addColorStop(0.5, '#8000ff');
         gradient.addColorStop(1, '#4000ff');
     } else {
-        gradient.addColorStop(0, '#85c1e9');
-        gradient.addColorStop(0.3, '#5dade2');
-        gradient.addColorStop(0.7, '#3498db');
+        gradient.addColorStop(0, '#5dade2');
+        gradient.addColorStop(0.5, '#3498db');
         gradient.addColorStop(1, '#2980b9');
     }
     ctx.fillStyle = gradient;
-    
-    // جسم الطائرة مع تأثير عمق
     ctx.fillRect(x + w/4, y + h/2, w/2, h/2);
     
-    // حدود مضيئة للتأثير 3D
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x + w/4, y + h/2, w/2, h/2);
-    
-    // مقدمة الطائرة مع تأثير معدني و 3D
-    const noseGradient = ctx.createRadialGradient(x + w/2, y + h/4, 0, x + w/2, y + h/4, w/2);
+    // مقدمة الطائرة مع تأثير معدني
+    const noseGradient = ctx.createLinearGradient(x + w/2, y, x + w/2, y + h/2);
     if (superMode) {
-        noseGradient.addColorStop(0, '#ffffff');
-        noseGradient.addColorStop(0.5, '#ff80ff');
+        noseGradient.addColorStop(0, '#ff80ff');
         noseGradient.addColorStop(1, '#ff00ff');
     } else {
-        noseGradient.addColorStop(0, '#ffffff');
-        noseGradient.addColorStop(0.5, '#85c1e9');
+        noseGradient.addColorStop(0, '#85c1e9');
         noseGradient.addColorStop(1, '#3498db');
     }
     ctx.fillStyle = noseGradient;
@@ -1443,25 +1439,10 @@ function drawSpaceship() {
     ctx.closePath();
     ctx.fill();
     
-    // حدود مضيئة للمقدمة
-    ctx.strokeStyle = superMode ? '#ff80ff' : '#85c1e9';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    
-    // الأجنحة مع تأثير معدني و 3D
-    const wingGradient = ctx.createLinearGradient(x, y + 2*h/3, x + w/3, y + h);
-    wingGradient.addColorStop(0, '#5dade2');
-    wingGradient.addColorStop(0.5, '#3498db');
-    wingGradient.addColorStop(1, '#2471a3');
-    ctx.fillStyle = wingGradient;
-    
-    // الجناح الأيسر
+    // الأجنحة مع تأثير معدني
+    ctx.fillStyle = '#2471a3';
     ctx.fillRect(x, y + 2*h/3, w/3, h/4);
-    ctx.fillRect(x - 2, y + 2*h/3 + 2, w/3, h/4); // ظل 3D
-    
-    // الجناح الأيمن
     ctx.fillRect(x + 2*w/3, y + 2*h/3, w/3, h/4);
-    ctx.fillRect(x + 2*w/3 + 2, y + 2*h/3 + 2, w/3, h/4); // ظل 3D
     
     // حدود مضيئة للأجنحة
     ctx.strokeStyle = '#85c1e9';
@@ -1519,9 +1500,11 @@ function shootBullet() {
     }
     
     // تشغيل صوت إطلاق النار
-    sounds.shoot.currentTime = 0;
-    sounds.shoot.volume = 0.1;
-    sounds.shoot.play().catch(() => {});
+    if (!muted) {
+        sounds.shoot.currentTime = 0;
+        sounds.shoot.volume = sfxVolume;
+        sounds.shoot.play().catch(() => {});
+    }
 }
 
 function createPlanet() {
@@ -1539,25 +1522,56 @@ function createPlanet() {
 function drawPlanet(planet) {
     const stage = getStage(currentStage);
     
-    // رسم الكوكب
-    ctx.fillStyle = stage.planetColor;
+    ctx.save();
+    ctx.translate(planet.x, planet.y);
+    
+    // الجسم الرئيسي للكوكب
+    const gradient = ctx.createRadialGradient(-planet.radius/3, -planet.radius/3, 0, 0, 0, planet.radius);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(0.3, stage.planetColor);
+    gradient.addColorStop(0.7, '#444444');
+    gradient.addColorStop(1, '#000000');
+    
+    ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
+    ctx.arc(0, 0, planet.radius, 0, Math.PI * 2);
     ctx.fill();
     
-    // إضافة تفاصيل الكوكب
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    // خطوط الكوكب (مثل المشتري)
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
+        const y = (i - 1) * planet.radius * 0.4;
+        ctx.beginPath();
+        ctx.ellipse(0, y, planet.radius * 0.8, planet.radius * 0.1, 0, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    
+    // بقع على الكوكب
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
-    ctx.arc(planet.x - planet.radius/3, planet.y - planet.radius/3, planet.radius/4, 0, Math.PI * 2);
+    ctx.arc(planet.radius * 0.3, planet.radius * 0.2, planet.radius * 0.15, 0, Math.PI * 2);
     ctx.fill();
     
-    // حدود الكوكب
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.arc(-planet.radius * 0.4, -planet.radius * 0.1, planet.radius * 0.1, 0, Math.PI * 2);
+    ctx.fill();
     
+    // حلقات الكوكب (مثل زحل)
+    if (planet.radius > 35) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, planet.radius * 1.5, planet.radius * 0.3, planet.rotation, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, planet.radius * 1.3, planet.radius * 0.25, planet.rotation, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    
+    ctx.restore();
     planet.rotation += 0.02;
 }
 
@@ -2367,3 +2381,82 @@ function drawSpaceTraps() {
         }
     });
 }
+
+// تحديث الشاشة عند تغيير الحجم
+window.addEventListener('resize', () => {
+    adjustCanvasSize();
+});
+
+// منع النقر بالزر الأيمن والسحب
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('selectstart', e => e.preventDefault());
+document.addEventListener('dragstart', e => e.preventDefault());
+
+// تحديث النقاط العالية في الواجهة
+highScoreElement.textContent = highScore;
+
+// بدء اللعبة عند الضغط على Enter
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !gameRunning) {
+        startGame();
+    }
+});
+
+// تحسين الأداء - تنظيف المصفوفات الكبيرة
+setInterval(() => {
+    if (!gameRunning) return;
+    
+    // تنظيف الجسيمات الزائدة
+    if (particles.length > 100) {
+        particles.splice(0, particles.length - 100);
+    }
+    if (thrustParticles.length > 50) {
+        thrustParticles.splice(0, thrustParticles.length - 50);
+    }
+}, 5000);
+
+// إعداد التحكم في الصوت - مبسط
+let muted = false;
+let musicVolume = 0.3;
+let sfxVolume = 0.5;
+
+// إعداد أحداث الصوت عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    const muteBtn = document.getElementById('mute-btn');
+    const musicVolumeSlider = document.getElementById('music-volume');
+    const sfxVolumeSlider = document.getElementById('sfx-volume');
+    
+    if (muteBtn) {
+        muteBtn.addEventListener('click', function() {
+            muted = !muted;
+            muteBtn.textContent = muted ? '🔇 الصوت' : '🔊 الصوت';
+            muteBtn.classList.toggle('muted', muted);
+            
+            if (muted) {
+                sounds.background.pause();
+            } else if (gameRunning) {
+                sounds.background.play().catch(() => {});
+            }
+        });
+    }
+    
+    if (musicVolumeSlider) {
+        musicVolumeSlider.addEventListener('input', function() {
+            musicVolume = this.value / 100;
+            sounds.background.volume = musicVolume;
+        });
+    }
+    
+    if (sfxVolumeSlider) {
+        sfxVolumeSlider.addEventListener('input', function() {
+            sfxVolume = this.value / 100;
+            Object.keys(sounds).forEach(key => {
+                if (key !== 'background') {
+                    sounds[key].volume = sfxVolume;
+                }
+            });
+        });
+    }
+});
+
+console.log('🚀 المستكشف الفضائي - تم تحميل اللعبة بنجاح!');

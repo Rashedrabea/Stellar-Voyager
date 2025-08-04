@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار اللعبة</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        canvas {
+            border: 2px solid #fff;
+            display: block;
+            margin: 20px auto;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <h1>اختبار اللعبة</h1>
+        <p>استخدم الأسهم للحركة ومسافة للإطلاق</p>
+        <button onclick="startTest()">ابدأ الاختبار</button>
+    </div>
+    
+    <canvas id="testCanvas" width="800" height="600"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gameRunning = false;
+        
+        const spaceship = {
+            x: 375,
+            y: 500,
+            width: 50,
+            height: 50,
+            speed: 5,
+            movingLeft: false,
+            movingRight: false,
+            movingUp: false,
+            movingDown: false
+        };
+        
+        function startTest() {
+            gameRunning = true;
+            gameLoop();
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // مسح الشاشة
+            ctx.fillStyle = '#000033';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // تحريك الطائرة
+            if (spaceship.movingLeft && spaceship.x > 0) {
+                spaceship.x -= spaceship.speed;
+            }
+            if (spaceship.movingRight && spaceship.x < canvas.width - spaceship.width) {
+                spaceship.x += spaceship.speed;
+            }
+            if (spaceship.movingUp && spaceship.y > 0) {
+                spaceship.y -= spaceship.speed;
+            }
+            if (spaceship.movingDown && spaceship.y < canvas.height - spaceship.height) {
+                spaceship.y += spaceship.speed;
+            }
+            
+            // رسم الطائرة
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(spaceship.x, spaceship.y, spaceship.width, spaceship.height);
+            
+            // رسم مثلث للمقدمة
+            ctx.fillStyle = '#5dade2';
+            ctx.beginPath();
+            ctx.moveTo(spaceship.x + spaceship.width/2, spaceship.y);
+            ctx.lineTo(spaceship.x + spaceship.width/4, spaceship.y + spaceship.height/2);
+            ctx.lineTo(spaceship.x + 3*spaceship.width/4, spaceship.y + spaceship.height/2);
+            ctx.closePath();
+            ctx.fill();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // التحكم بالمفاتيح
+        window.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    spaceship.movingLeft = true;
+                    break;
+                case 'ArrowRight':
+                    spaceship.movingRight = true;
+                    break;
+                case 'ArrowUp':
+                    spaceship.movingUp = true;
+                    break;
+                case 'ArrowDown':
+                    spaceship.movingDown = true;
+                    break;
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    spaceship.movingLeft = false;
+                    break;
+                case 'ArrowRight':
+                    spaceship.movingRight = false;
+                    break;
+                case 'ArrowUp':
+                    spaceship.movingUp = false;
+                    break;
+                case 'ArrowDown':
+                    spaceship.movingDown = false;
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>

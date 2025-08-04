@@ -1,0 +1,40 @@
+{
+  "name": "space-explorer-arabic",
+  "version": "1.0.0",
+  "description": "لعبة المستكشف الفضائي - لعبة فضائية مجانية باللغة العربية",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "build": "echo 'اللعبة جاهزة للنشر'",
+    "deploy": "gh-pages -d .",
+    "test": "echo 'اختبار اللعبة'"
+  },
+  "keywords": [
+    "game",
+    "arabic",
+    "space",
+    "shooter",
+    "html5",
+    "canvas",
+    "javascript",
+    "لعبة",
+    "عربية",
+    "فضائية"
+  ],
+  "author": "راشد ربيع",
+  "license": "Proprietary",
+  "homepage": "https://github.com/username/space-explorer-arabic",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/space-explorer-arabic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/username/space-explorer-arabic/issues"
+  },
+  "devDependencies": {
+    "gh-pages": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

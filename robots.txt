@@ -1,16 +1,16 @@
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://yoursite.com/sitemap.xml
+
+# Game files
 Allow: /css/
 Allow: /js/
 Allow: /images/
 Allow: /sounds/
-
-# Sitemap
-Sitemap: /sitemap.xml
-
-# Game specific
-Allow: /index.html
+Allow: /manifest.json
 
 # Copyright notice
 # This game is protected by copyright law
-# All rights reserved 2024
+# All rights reserved © 2024
