@@ -406,7 +406,7 @@ function moveSpaceshipToTouch(touchX, touchY) {
     const deltaX = scaledX - spaceshipCenterX;
     const deltaY = scaledY - spaceshipCenterY;
     
-    const threshold = 20;
+    const threshold = 5; // تقليل الحد الأدنى للحركة
     
     if (Math.abs(deltaX) > threshold) {
         spaceship.movingLeft = deltaX < 0;
@@ -629,6 +629,7 @@ function update(deltaTime) {
             createExplosion(asteroids[i].x, asteroids[i].y);
             sounds.explosion.currentTime = 0;
             sounds.explosion.play().catch(() => {});
+            safeVibrate(150);
             asteroids.splice(i, 1);
             
             if (shield > 0) {
@@ -781,6 +782,7 @@ function update(deltaTime) {
             createExplosion(spaceship.x + spaceship.width/2, spaceship.y + spaceship.height/2);
             sounds.explosion.currentTime = 0;
             sounds.explosion.play().catch(() => {});
+            safeVibrate(300);
             loseLife();
             return;
         }
@@ -2434,8 +2436,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (muted) {
                 sounds.background.pause();
-            } else if (gameRunning) {
-                sounds.background.play().catch(() => {});
+                Object.keys(sounds).forEach(key => {
+                    sounds[key].volume = 0;
+                });
+            } else {
+                if (gameRunning) {
+                    sounds.background.play().catch(() => {});
+                }
+                sounds.background.volume = musicVolume;
+                Object.keys(sounds).forEach(key => {
+                    if (key !== 'background') {
+                        sounds[key].volume = sfxVolume;
+                    }
+                });
             }
         });
     }
