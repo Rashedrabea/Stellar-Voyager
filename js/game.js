@@ -49,11 +49,22 @@ function adjustCanvasSize() {
         const container = document.querySelector('.game-screen');
         if (container) {
             canvas.style.width = '100%';
-            canvas.style.height = 'calc(100vh - 200px)';
+            canvas.style.height = 'calc(100vh - 120px)'; // مساحة أكبر للموبايل
         }
+        // تحديث سرعة الطائرة للموبايل
+        spaceship.speed = 10;
     } else {
         canvas.style.width = '800px';
         canvas.style.height = '600px';
+        spaceship.speed = 5;
+    }
+    
+    // تحسين جودة الرسم للموبايل
+    if (window.devicePixelRatio > 1) {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
 }
 
@@ -251,7 +262,7 @@ const spaceship = {
     y: 500,
     width: 50,
     height: 50,
-    speed: 5,
+    speed: window.innerWidth <= 768 ? 8 : 5, // سرعة أعلى للموبايل
     color: '#3498db',
     movingLeft: false,
     movingRight: false,
@@ -380,7 +391,13 @@ function handleTouchMove(e) {
     const touchX = touch.clientX - rect.left;
     const touchY = touch.clientY - rect.top;
     
+    // تحسين الاستجابة للموبايل
     moveSpaceshipToTouch(touchX, touchY);
+    
+    // تحديث فوري للحركة
+    if (window.innerWidth <= 768) {
+        spaceship.speed = 12; // سرعة عالية للموبايل
+    }
 }
 
 function handleTouchEnd(e) {
@@ -389,7 +406,8 @@ function handleTouchEnd(e) {
     
     const touchDuration = Date.now() - touchStartTime;
     
-    if (touchDuration < 200 && !gamePaused && gameRunning) {
+    // إطلاق عند اللمس السريع (أقل من 300 ملي ثانية)
+    if (touchDuration < 300 && !gamePaused && gameRunning) {
         shootBullet();
     }
     
@@ -398,6 +416,11 @@ function handleTouchEnd(e) {
     spaceship.movingRight = false;
     spaceship.movingUp = false;
     spaceship.movingDown = false;
+    
+    // إعادة تعيين السرعة العادية
+    if (window.innerWidth <= 768) {
+        spaceship.speed = 8;
+    }
 }
 
 function moveSpaceshipToTouch(touchX, touchY) {
@@ -411,8 +434,9 @@ function moveSpaceshipToTouch(touchX, touchY) {
     const deltaX = scaledX - spaceshipCenterX;
     const deltaY = scaledY - spaceshipCenterY;
     
-    const threshold = 20;
+    const threshold = 15; // تقليل العتبة لحساسية أفضل
     
+    // تحسين الحركة للموبايل - حركة مباشرة وسريعة
     if (Math.abs(deltaX) > threshold) {
         spaceship.movingLeft = deltaX < 0;
         spaceship.movingRight = deltaX > 0;
@@ -428,6 +452,9 @@ function moveSpaceshipToTouch(touchX, touchY) {
         spaceship.movingUp = false;
         spaceship.movingDown = false;
     }
+    
+    // تحديث سرعة الطائرة للموبايل
+    spaceship.speed = window.innerWidth <= 768 ? 10 : 5;
 }
 
 // تحميل الإحصائيات والإنجازات
@@ -529,18 +556,20 @@ function togglePause() {
 
 function update(deltaTime) {
     try {
-    // تحريك المركبة الفضائية
+    // تحريك المركبة الفضائية - تحسين للموبايل
+    const currentSpeed = window.innerWidth <= 768 ? 10 : spaceship.speed;
+    
     if (spaceship.movingLeft && spaceship.x > 0) {
-        spaceship.x -= spaceship.speed;
+        spaceship.x -= currentSpeed;
     }
     if (spaceship.movingRight && spaceship.x < canvas.width - spaceship.width) {
-        spaceship.x += spaceship.speed;
+        spaceship.x += currentSpeed;
     }
     if (spaceship.movingUp && spaceship.y > 0) {
-        spaceship.y -= spaceship.speed;
+        spaceship.y -= currentSpeed;
     }
     if (spaceship.movingDown && spaceship.y < canvas.height - spaceship.height) {
-        spaceship.y += spaceship.speed;
+        spaceship.y += currentSpeed;
     }
     
     // استهلاك الوقود
@@ -952,29 +981,74 @@ function render() {
     
     drawSpaceship();
     
-    // رسم الكويكبات بلون المرحلة
-    ctx.fillStyle = stage.asteroidColor;
+    // رسم الكويكبات بلون المرحلة مع تأثير 3D
     asteroids.forEach(asteroid => {
+        // تدرج لوني للتأثير 3D
+        const asteroidGradient = ctx.createRadialGradient(
+            asteroid.x - asteroid.radius/3, asteroid.y - asteroid.radius/3, 0,
+            asteroid.x, asteroid.y, asteroid.radius
+        );
+        asteroidGradient.addColorStop(0, 'rgba(255,255,255,0.8)');
+        asteroidGradient.addColorStop(0.3, stage.asteroidColor);
+        asteroidGradient.addColorStop(1, 'rgba(0,0,0,0.5)');
+        
+        ctx.fillStyle = asteroidGradient;
         ctx.beginPath();
         ctx.arc(asteroid.x, asteroid.y, asteroid.radius, 0, Math.PI * 2);
         ctx.fill();
-        // إضافة تأثير بريق
-        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-        ctx.lineWidth = 1;
+        
+        // ظل الكويكب
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath();
+        ctx.arc(asteroid.x + 2, asteroid.y + 2, asteroid.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // حدود مضيئة
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(asteroid.x, asteroid.y, asteroid.radius, 0, Math.PI * 2);
         ctx.stroke();
     });
     
-    // رسم النجوم بلون المرحلة
-    ctx.fillStyle = stage.starColor;
+    // رسم النجوم بلون المرحلة مع تأثير 3D
     stars.forEach(star => {
+        // تدرج لوني للنجمة
+        const starGradient = ctx.createRadialGradient(
+            star.x, star.y, 0,
+            star.x, star.y, star.radius * 2
+        );
+        starGradient.addColorStop(0, '#ffffff');
+        starGradient.addColorStop(0.5, stage.starColor);
+        starGradient.addColorStop(1, 'rgba(0,0,0,0)');
+        
+        ctx.fillStyle = starGradient;
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
         ctx.fill();
-        // إضافة تأثير بريق
+        
+        // تأثير بريق محسن
         ctx.shadowColor = stage.starColor;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius/2, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
+        
+        // نجمة متألقة
+        ctx.strokeStyle = stage.starColor;
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 8; i++) {
+            const angle = (i * Math.PI) / 4;
+            ctx.beginPath();
+            ctx.moveTo(star.x, star.y);
+            ctx.lineTo(
+                star.x + Math.cos(angle) * star.radius * 1.5,
+                star.y + Math.sin(angle) * star.radius * 1.5
+            );
+            ctx.stroke();
+        }
     });
     
     // رسم القوى الخاصة مع تأثير نبض
@@ -1312,6 +1386,10 @@ function drawSpaceship() {
         createThrustParticles();
     }
     
+    // تأثير 3D بسيط - ظلال
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(x + 3, y + h + 2, w, 8); // ظل الطائرة
+    
     // تأثير الوضع المحسن
     if (superMode) {
         // هالة مضيئة حول الطائرة
@@ -1323,27 +1401,38 @@ function drawSpaceship() {
         ctx.shadowBlur = 0;
     }
     
-    // رسم جسم الطائرة بتدرج لوني
-    const gradient = ctx.createLinearGradient(x, y, x, y + h);
+    // رسم جسم الطائرة بتدرج لوني مع تأثير 3D
+    const gradient = ctx.createLinearGradient(x, y, x + w, y + h);
     if (superMode) {
-        gradient.addColorStop(0, '#ff00ff');
-        gradient.addColorStop(0.5, '#8000ff');
+        gradient.addColorStop(0, '#ff80ff');
+        gradient.addColorStop(0.3, '#ff00ff');
+        gradient.addColorStop(0.7, '#8000ff');
         gradient.addColorStop(1, '#4000ff');
     } else {
-        gradient.addColorStop(0, '#5dade2');
-        gradient.addColorStop(0.5, '#3498db');
+        gradient.addColorStop(0, '#85c1e9');
+        gradient.addColorStop(0.3, '#5dade2');
+        gradient.addColorStop(0.7, '#3498db');
         gradient.addColorStop(1, '#2980b9');
     }
     ctx.fillStyle = gradient;
+    
+    // جسم الطائرة مع تأثير عمق
     ctx.fillRect(x + w/4, y + h/2, w/2, h/2);
     
-    // مقدمة الطائرة مع تأثير معدني
-    const noseGradient = ctx.createLinearGradient(x + w/2, y, x + w/2, y + h/2);
+    // حدود مضيئة للتأثير 3D
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + w/4, y + h/2, w/2, h/2);
+    
+    // مقدمة الطائرة مع تأثير معدني و 3D
+    const noseGradient = ctx.createRadialGradient(x + w/2, y + h/4, 0, x + w/2, y + h/4, w/2);
     if (superMode) {
-        noseGradient.addColorStop(0, '#ff80ff');
+        noseGradient.addColorStop(0, '#ffffff');
+        noseGradient.addColorStop(0.5, '#ff80ff');
         noseGradient.addColorStop(1, '#ff00ff');
     } else {
-        noseGradient.addColorStop(0, '#85c1e9');
+        noseGradient.addColorStop(0, '#ffffff');
+        noseGradient.addColorStop(0.5, '#85c1e9');
         noseGradient.addColorStop(1, '#3498db');
     }
     ctx.fillStyle = noseGradient;
@@ -1354,10 +1443,25 @@ function drawSpaceship() {
     ctx.closePath();
     ctx.fill();
     
-    // الأجنحة مع تأثير معدني
-    ctx.fillStyle = '#2471a3';
+    // حدود مضيئة للمقدمة
+    ctx.strokeStyle = superMode ? '#ff80ff' : '#85c1e9';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // الأجنحة مع تأثير معدني و 3D
+    const wingGradient = ctx.createLinearGradient(x, y + 2*h/3, x + w/3, y + h);
+    wingGradient.addColorStop(0, '#5dade2');
+    wingGradient.addColorStop(0.5, '#3498db');
+    wingGradient.addColorStop(1, '#2471a3');
+    ctx.fillStyle = wingGradient;
+    
+    // الجناح الأيسر
     ctx.fillRect(x, y + 2*h/3, w/3, h/4);
+    ctx.fillRect(x - 2, y + 2*h/3 + 2, w/3, h/4); // ظل 3D
+    
+    // الجناح الأيمن
     ctx.fillRect(x + 2*w/3, y + 2*h/3, w/3, h/4);
+    ctx.fillRect(x + 2*w/3 + 2, y + 2*h/3 + 2, w/3, h/4); // ظل 3D
     
     // حدود مضيئة للأجنحة
     ctx.strokeStyle = '#85c1e9';
