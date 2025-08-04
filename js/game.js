@@ -39,23 +39,26 @@ const victoryLevelElement = document.getElementById('victory-level');
 const defeatScoreElement = document.getElementById('defeat-score');
 const defeatLevelElement = document.getElementById('defeat-level');
 
-// إعداد اللعبة - متجاوب
-function resizeCanvas() {
+// إعداد اللعبة
+canvas.width = 800;
+canvas.height = 600;
+
+// تحسين الحجم للموبايل
+function adjustCanvasSize() {
     if (window.innerWidth <= 768) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - 120;
+        const container = document.querySelector('.game-screen');
+        if (container) {
+            canvas.style.width = '100%';
+            canvas.style.height = 'calc(100vh - 200px)';
+        }
     } else {
-        canvas.width = 800;
-        canvas.height = 600;
+        canvas.style.width = '800px';
+        canvas.style.height = '600px';
     }
-    
-    // إعادة تعيين موقع الطائرة
-    spaceship.x = canvas.width / 2 - 25;
-    spaceship.y = canvas.height - 100;
 }
 
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+adjustCanvasSize();
+window.addEventListener('resize', adjustCanvasSize);
 
 // Copyright Protection System
 (function() {
@@ -196,6 +199,12 @@ let rescueTargets = [];
 let cameraShake = 0;
 let superMode = false;
 let superModeTimer = 0;
+let spaceStorms = [];
+let spaceTraps = [];
+let wormholes = [];
+let meteorShowers = [];
+let timeSlowEffect = false;
+let timeSlowTimer = 0;
 
 // إحصائيات
 let gameStats = {
@@ -238,8 +247,8 @@ function getDifficultySettings(level) {
 
 // عناصر اللعبة
 const spaceship = {
-    x: canvas.width / 2 - 25,
-    y: canvas.height - 100,
+    x: 400 - 25,
+    y: 500,
     width: 50,
     height: 50,
     speed: 5,
@@ -319,72 +328,106 @@ statsBackBtn.addEventListener('click', backToMenu);
 achievementsBackBtn.addEventListener('click', backToMenu);
 shareBtn.addEventListener('click', shareScore);
 
-// أزرار التحكم باللمس للموبايل
-const mobileControls = document.getElementById('mobile-controls');
-const upBtn = document.getElementById('up-btn');
-const downBtn = document.getElementById('down-btn');
-const leftBtn = document.getElementById('left-btn');
-const rightBtn = document.getElementById('right-btn');
-const fireBtn = document.getElementById('fire-btn');
-const pauseBtn = document.getElementById('pause-btn');
+// تحكم باللمس المباشر
+let touchOverlay, mobileUI, pauseBtn;
+let isTouching = false;
+let touchStartTime = 0;
 
-// أحداث اللمس
-if (upBtn) {
-    upBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (!gamePaused) spaceship.movingUp = true;
-    });
-    upBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        spaceship.movingUp = false;
-    });
+window.addEventListener('DOMContentLoaded', function() {
+    touchOverlay = document.getElementById('touch-overlay');
+    mobileUI = document.getElementById('mobile-ui');
+    pauseBtn = document.getElementById('pause-btn');
+    
+    setupTouchControls();
+});
+
+function setupTouchControls() {
+    if (touchOverlay) {
+        touchOverlay.addEventListener('touchstart', handleTouchStart, {passive: false});
+        touchOverlay.addEventListener('touchmove', handleTouchMove, {passive: false});
+        touchOverlay.addEventListener('touchend', handleTouchEnd, {passive: false});
+    }
+    
+    if (pauseBtn) {
+        pauseBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            togglePause();
+        });
+    }
 }
 
-if (downBtn) {
-    downBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (!gamePaused) spaceship.movingDown = true;
-    });
-    downBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        spaceship.movingDown = false;
-    });
+function handleTouchStart(e) {
+    e.preventDefault();
+    if (gamePaused || !gameRunning) return;
+    
+    isTouching = true;
+    touchStartTime = Date.now();
+    
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const touchX = touch.clientX - rect.left;
+    const touchY = touch.clientY - rect.top;
+    
+    moveSpaceshipToTouch(touchX, touchY);
 }
 
-if (leftBtn) {
-    leftBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (!gamePaused) spaceship.movingLeft = true;
-    });
-    leftBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (!isTouching || gamePaused || !gameRunning) return;
+    
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const touchX = touch.clientX - rect.left;
+    const touchY = touch.clientY - rect.top;
+    
+    moveSpaceshipToTouch(touchX, touchY);
+}
+
+function handleTouchEnd(e) {
+    e.preventDefault();
+    if (!isTouching) return;
+    
+    const touchDuration = Date.now() - touchStartTime;
+    
+    if (touchDuration < 200 && !gamePaused && gameRunning) {
+        shootBullet();
+    }
+    
+    isTouching = false;
+    spaceship.movingLeft = false;
+    spaceship.movingRight = false;
+    spaceship.movingUp = false;
+    spaceship.movingDown = false;
+}
+
+function moveSpaceshipToTouch(touchX, touchY) {
+    const canvasScale = canvas.width / canvas.offsetWidth;
+    const scaledX = touchX * canvasScale;
+    const scaledY = touchY * canvasScale;
+    
+    const spaceshipCenterX = spaceship.x + spaceship.width / 2;
+    const spaceshipCenterY = spaceship.y + spaceship.height / 2;
+    
+    const deltaX = scaledX - spaceshipCenterX;
+    const deltaY = scaledY - spaceshipCenterY;
+    
+    const threshold = 20;
+    
+    if (Math.abs(deltaX) > threshold) {
+        spaceship.movingLeft = deltaX < 0;
+        spaceship.movingRight = deltaX > 0;
+    } else {
         spaceship.movingLeft = false;
-    });
-}
-
-if (rightBtn) {
-    rightBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (!gamePaused) spaceship.movingRight = true;
-    });
-    rightBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
         spaceship.movingRight = false;
-    });
-}
-
-if (fireBtn) {
-    fireBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (!gamePaused) shootBullet();
-    });
-}
-
-if (pauseBtn) {
-    pauseBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        togglePause();
-    });
+    }
+    
+    if (Math.abs(deltaY) > threshold) {
+        spaceship.movingUp = deltaY < 0;
+        spaceship.movingDown = deltaY > 0;
+    } else {
+        spaceship.movingUp = false;
+        spaceship.movingDown = false;
+    }
 }
 
 // تحميل الإحصائيات والإنجازات
@@ -445,9 +488,10 @@ function startGame() {
     hideAllScreens();
     gameScreen.style.display = 'block';
     
-    // إظهار أزرار التحكم على الموبايل
-    if (window.innerWidth <= 768 && mobileControls) {
-        mobileControls.style.display = 'flex';
+    // إظهار واجهة الموبايل
+    if (window.innerWidth <= 1024 && touchOverlay && mobileUI) {
+        touchOverlay.style.display = 'block';
+        mobileUI.style.display = 'flex';
     }
     
 
@@ -516,9 +560,10 @@ function update(deltaTime) {
         if (shield < 0) shield = 0;
     }
     
-    // توليد الكويكبات بشكل عشوائي
+    // توليد الكويكبات بشكل عشوائي (مع تأثير إبطاء الزمن)
     const settings = getDifficultySettings(level);
-    if (Math.random() < settings.asteroidChance) {
+    const timeMultiplier = timeSlowEffect ? 0.3 : 1;
+    if (Math.random() < settings.asteroidChance * timeMultiplier) {
         createAsteroid();
     }
     
@@ -542,9 +587,20 @@ function update(deltaTime) {
         createEnemyShip();
     }
     
-    // توليد زعيم في نهاية كل 10 مراحل
-    if (level % 10 === 0 && level > 0 && bosses.length === 0 && Math.random() < 0.01) {
+    // توليد زعيم في نهاية كل 5 مراحل + زعماء عشوائيين
+    if ((level % 5 === 0 && level > 0 && bosses.length === 0 && Math.random() < 0.02) || 
+        (level > 20 && Math.random() < 0.005)) {
         createBoss();
+    }
+    
+    // توليد عواصف فضائية
+    if (Math.random() < 0.0008 * level) {
+        createSpaceStorm();
+    }
+    
+    // توليد أفخاخ فضائية
+    if (Math.random() < 0.0005 && level > 10) {
+        createSpaceTrap();
     }
     
     // توليد محطات وقود
@@ -610,8 +666,8 @@ function update(deltaTime) {
             sounds.collect.currentTime = 0;
             sounds.collect.play().catch(() => {});
             
-            // زيادة المستوى كل 800 نقطة (مسافة أطول بين المراحل)
-            if (score >= level * 800) {
+            // زيادة المستوى كل 1500 نقطة (مراحل أطول وأكثر إثارة)
+            if (score >= level * 1500) {
                 level++;
                 if (level > WIN_LEVEL) {
                     victory();
@@ -803,6 +859,9 @@ function update(deltaTime) {
     updateBosses();
     updateMissiles();
     updateFuelStations();
+    updateSpaceStorms();
+    updateSpaceTraps();
+    updateTimeSlowEffect();
     updateStageTransition();
     updateGameStats();
     updateUI();
@@ -933,7 +992,8 @@ function render() {
         ctx.font = 'bold 12px Arial';
         ctx.textAlign = 'center';
         const symbols = { shield: '⛨', fuel: '⛽', life: '♥', 
-                         rapidfire: '⚡', multishot: '⚙', damage: '💥', megashot: '⭐', supermode: '🚀' };
+                         rapidfire: '⚡', multishot: '⚙', damage: '💥', megashot: '⭐', 
+                         supermode: '🚀', timeslow: '⏱️', wormhole: '🌀' };
         ctx.fillText(symbols[powerUp.type] || '?', 
                     powerUp.x + powerUp.width/2, powerUp.y + powerUp.height/2 + 4);
         ctx.textAlign = 'start';
@@ -1040,8 +1100,24 @@ function render() {
     // رسم التأثيرات الخاصة
     drawSpecialEffects();
     
+    // رسم العواصف والأفخاخ
+    drawSpaceStorms();
+    drawSpaceTraps();
+    
     // رسم مؤشرات الأسلحة
     drawWeaponIndicators();
+    
+    // تأثير إبطاء الزمن
+    if (timeSlowEffect) {
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#00ffff';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('إبطاء الزمن مفعل', canvas.width/2, 50);
+        ctx.textAlign = 'start';
+    }
 }
 
 function createAsteroid() {
@@ -1149,11 +1225,12 @@ function drawStarsBackground() {
 }
 
 function createPowerUp() {
-    const types = ['shield', 'fuel', 'life', 'rapidfire', 'multishot', 'damage', 'megashot', 'supermode'];
+    const types = ['shield', 'fuel', 'life', 'rapidfire', 'multishot', 'damage', 'megashot', 'supermode', 'timeslow', 'wormhole'];
     const type = types[Math.floor(Math.random() * types.length)];
     const colors = { 
         shield: '#0ff', fuel: '#0f0', life: '#f0f', 
-        rapidfire: '#ff0', multishot: '#f80', damage: '#f00', megashot: '#80f', supermode: '#ff00ff'
+        rapidfire: '#ff0', multishot: '#f80', damage: '#f00', megashot: '#80f', 
+        supermode: '#ff00ff', timeslow: '#00ffff', wormhole: '#8000ff'
     };
     
     const powerUp = {
@@ -1199,8 +1276,17 @@ function applyPowerUp(type) {
             break;
         case 'supermode':
             superMode = true;
-            superModeTimer = 600; // 10 ثواني
+            superModeTimer = 600;
             createSpecialEffect('وضع القوة الفائقة!', '#ff00ff');
+            break;
+        case 'timeslow':
+            timeSlowEffect = true;
+            timeSlowTimer = 300;
+            createSpecialEffect('إبطاء الزمن!', '#00ffff');
+            break;
+        case 'wormhole':
+            createWormhole();
+            createSpecialEffect('ثقب دودي!', '#8000ff');
             break;
     }
 }
@@ -1631,6 +1717,14 @@ function updateWeaponEffects() {
         }
     }
     
+    // تحديث إبطاء الزمن
+    if (timeSlowEffect) {
+        timeSlowTimer--;
+        if (timeSlowTimer <= 0) {
+            timeSlowEffect = false;
+        }
+    }
+    
     // تحديث التأثيرات الخاصة
     for (let i = specialEffects.length - 1; i >= 0; i--) {
         specialEffects[i].life--;
@@ -1723,10 +1817,9 @@ function backToMenu() {
     statsScreen.style.display = 'none';
     achievementsScreen.style.display = 'none';
     
-    // إخفاء أزرار التحكم
-    if (mobileControls) {
-        mobileControls.style.display = 'none';
-    }
+    // إخفاء واجهة الموبايل
+    if (touchOverlay) touchOverlay.style.display = 'none';
+    if (mobileUI) mobileUI.style.display = 'none';
 }
 
 // نظام الكومبو
@@ -2035,4 +2128,138 @@ function updateGameStats() {
             unlockAchievement('starCollector');
         }
     }
+}
+
+// ميزات جديدة للإثارة
+function createSpaceStorm() {
+    spaceStorms.push({
+        x: Math.random() * canvas.width,
+        y: -50,
+        width: 100 + Math.random() * 100,
+        height: 150,
+        speed: 2,
+        intensity: Math.random() * 0.5 + 0.3
+    });
+}
+
+function createSpaceTrap() {
+    spaceTraps.push({
+        x: Math.random() * (canvas.width - 80),
+        y: -80,
+        radius: 40,
+        speed: 1,
+        pullForce: 0.5,
+        active: true
+    });
+}
+
+function createWormhole() {
+    const exitX = Math.random() * (canvas.width - 100) + 50;
+    const exitY = Math.random() * (canvas.height - 200) + 100;
+    
+    wormholes.push({
+        x: spaceship.x,
+        y: spaceship.y,
+        exitX: exitX,
+        exitY: exitY,
+        radius: 30,
+        life: 180
+    });
+    
+    // نقل الطائرة فوراً
+    spaceship.x = exitX;
+    spaceship.y = exitY;
+}
+
+function updateSpaceStorms() {
+    for (let i = spaceStorms.length - 1; i >= 0; i--) {
+        const storm = spaceStorms[i];
+        storm.y += storm.speed;
+        
+        // تأثير على الطائرة
+        if (spaceship.x > storm.x && spaceship.x < storm.x + storm.width &&
+            spaceship.y > storm.y && spaceship.y < storm.y + storm.height) {
+            spaceship.x += (Math.random() - 0.5) * 4;
+            spaceship.y += (Math.random() - 0.5) * 4;
+            fuel -= 0.2;
+        }
+        
+        if (storm.y > canvas.height) {
+            spaceStorms.splice(i, 1);
+        }
+    }
+}
+
+function updateSpaceTraps() {
+    for (let i = spaceTraps.length - 1; i >= 0; i--) {
+        const trap = spaceTraps[i];
+        trap.y += trap.speed;
+        
+        // جذب الطائرة
+        const dx = trap.x - spaceship.x;
+        const dy = trap.y - spaceship.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < trap.radius * 2) {
+            spaceship.x += dx * trap.pullForce * 0.01;
+            spaceship.y += dy * trap.pullForce * 0.01;
+        }
+        
+        if (trap.y > canvas.height) {
+            spaceTraps.splice(i, 1);
+        }
+    }
+}
+
+function updateTimeSlowEffect() {
+    if (timeSlowEffect) {
+        timeSlowTimer--;
+        if (timeSlowTimer <= 0) {
+            timeSlowEffect = false;
+        }
+    }
+}
+
+function drawSpaceStorms() {
+    spaceStorms.forEach(storm => {
+        ctx.fillStyle = `rgba(255, 255, 0, ${storm.intensity})`;
+        ctx.fillRect(storm.x, storm.y, storm.width, storm.height);
+        
+        // تأثير برق
+        for (let i = 0; i < 5; i++) {
+            ctx.strokeStyle = '#ffff00';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(storm.x + Math.random() * storm.width, storm.y);
+            ctx.lineTo(storm.x + Math.random() * storm.width, storm.y + storm.height);
+            ctx.stroke();
+        }
+    });
+}
+
+function drawSpaceTraps() {
+    spaceTraps.forEach(trap => {
+        // دائرة الجذب
+        ctx.strokeStyle = '#ff0080';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(trap.x, trap.y, trap.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // تأثير دوامي
+        ctx.strokeStyle = '#ff0080';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 8; i++) {
+            const angle = (Date.now() * 0.01 + i * Math.PI / 4) % (Math.PI * 2);
+            const x1 = trap.x + Math.cos(angle) * trap.radius * 0.5;
+            const y1 = trap.y + Math.sin(angle) * trap.radius * 0.5;
+            const x2 = trap.x + Math.cos(angle) * trap.radius;
+            const y2 = trap.y + Math.sin(angle) * trap.radius;
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+    });
 }

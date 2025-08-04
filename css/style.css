@@ -339,65 +339,37 @@ body {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
-/* Mobile Controls */
-.mobile-controls {
+/* Touch Controls */
+.touch-overlay {
     position: absolute;
-    bottom: 20px;
+    top: 0;
     left: 0;
-    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
     display: none;
-    justify-content: space-between;
+    touch-action: none;
+}
+
+.mobile-ui {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: none;
+    flex-direction: column;
     align-items: flex-end;
-    padding: 0 20px;
+    gap: 10px;
     z-index: 10;
 }
 
-.control-pad {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-}
-
-.control-row {
-    display: flex;
-    gap: 5px;
-}
-
-.control-btn {
-    width: 50px;
-    height: 50px;
-    border: 2px solid #fff;
+.touch-hint {
     background: rgba(0,0,0,0.7);
     color: #fff;
-    font-size: 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    user-select: none;
-    touch-action: manipulation;
-}
-
-.control-btn:active {
-    background: rgba(255,255,255,0.3);
-    transform: scale(0.95);
-}
-
-.fire-btn {
-    width: 70px;
-    height: 70px;
-    border: 3px solid #ff0000;
-    background: rgba(255,0,0,0.7);
-    color: #fff;
-    font-size: 30px;
-    border-radius: 50%;
-    cursor: pointer;
-    user-select: none;
-    touch-action: manipulation;
-}
-
-.fire-btn:active {
-    background: rgba(255,0,0,0.9);
-    transform: scale(0.95);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    text-align: center;
+    border: 1px solid #fff;
 }
 
 .pause-btn {
@@ -420,8 +392,12 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-    .mobile-controls {
+@media (max-width: 1024px) {
+    .touch-overlay {
+        display: block;
+    }
+    
+    .mobile-ui {
         display: flex;
     }
     
@@ -432,11 +408,14 @@ body {
     .game-screen {
         width: 100vw;
         height: 100vh;
+        position: relative;
     }
     
     #game-canvas {
         width: 100%;
-        height: calc(100vh - 120px);
+        height: calc(100vh - 200px);
+        max-width: 100%;
+        max-height: calc(100vh - 200px);
     }
     
     .game-stats {
@@ -444,6 +423,10 @@ body {
         gap: 5px;
         width: 100%;
         grid-template-columns: repeat(3, 1fr);
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
     }
     
     .game-stats div {
@@ -452,16 +435,9 @@ body {
 }
 
 @media (max-width: 480px) {
-    .control-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-    }
-    
-    .fire-btn {
-        width: 60px;
-        height: 60px;
-        font-size: 24px;
+    .touch-hint {
+        font-size: 10px;
+        padding: 3px 8px;
     }
     
     .pause-btn {
