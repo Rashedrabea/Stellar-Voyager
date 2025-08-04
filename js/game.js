@@ -45,13 +45,14 @@ canvas.height = 600;
 
 // تحسين الحجم للموبايل
 function adjustCanvasSize() {
-    if (window.innerWidth <= 768) {
-        const container = document.querySelector('.game-screen');
-        if (container) {
-            canvas.style.width = '100%';
-            canvas.style.height = 'calc(100vh - 200px)';
-        }
+    if (document.fullscreenElement) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
     } else {
+        canvas.width = 800;
+        canvas.height = 600;
         canvas.style.width = '800px';
         canvas.style.height = '600px';
     }
@@ -281,6 +282,23 @@ window.addEventListener('keydown', (e) => {
             e.preventDefault();
             togglePause();
             break;
+        case 'Escape':
+            e.preventDefault();
+            if (document.fullscreenElement) {
+                exitFullscreen();
+            } else {
+                enterFullscreen();
+            }
+            break;
+        case 'f':
+        case 'F':
+            e.preventDefault();
+            if (document.fullscreenElement) {
+                exitFullscreen();
+            } else {
+                enterFullscreen();
+            }
+            break;
     }
 });
 
@@ -349,6 +367,18 @@ function setupTouchControls() {
             togglePause();
         });
     }
+    
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (document.fullscreenElement) {
+                exitFullscreen();
+            } else {
+                enterFullscreen();
+            }
+        });
+    }
 }
 
 function handleTouchStart(e) {
@@ -406,20 +436,16 @@ function moveSpaceshipToTouch(touchX, touchY) {
     const deltaX = scaledX - spaceshipCenterX;
     const deltaY = scaledY - spaceshipCenterY;
     
-    const threshold = 5; // تقليل الحد الأدنى للحركة
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     
-    if (Math.abs(deltaX) > threshold) {
-        spaceship.movingLeft = deltaX < 0;
-        spaceship.movingRight = deltaX > 0;
+    if (distance > 10 && distance < 100) {
+        spaceship.movingLeft = deltaX < -10;
+        spaceship.movingRight = deltaX > 10;
+        spaceship.movingUp = deltaY < -10;
+        spaceship.movingDown = deltaY > 10;
     } else {
         spaceship.movingLeft = false;
         spaceship.movingRight = false;
-    }
-    
-    if (Math.abs(deltaY) > threshold) {
-        spaceship.movingUp = deltaY < 0;
-        spaceship.movingDown = deltaY > 0;
-    } else {
         spaceship.movingUp = false;
         spaceship.movingDown = false;
     }
@@ -432,7 +458,8 @@ loadAchievements();
 
 
 function startGame() {
-
+    // دخول وضع ملء الشاشة
+    enterFullscreen();
     
     gameRunning = true;
     gamePaused = false;
@@ -2460,5 +2487,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// دوال ملء الشاشة
+function enterFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {});
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+    }
+}
+
+function exitFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
+}
 
 console.log('🚀 المستكشف الفضائي - تم تحميل اللعبة بنجاح!');
