@@ -478,7 +478,9 @@ function startGame() {
     createBackgroundStars();
     
     // تشغيل الموسيقى الخلفية
-    if (!muted) {
+    if (!muted && sounds.background) {
+        sounds.background.volume = musicVolume;
+        sounds.background.currentTime = 0;
         sounds.background.play().catch(() => {});
     }
     
@@ -664,8 +666,12 @@ function update(deltaTime) {
             gameStats.starsCollected++;
             fuel = Math.min(100, fuel + 15);
             if (!muted) {
-                sounds.collect.currentTime = 0;
-                sounds.collect.play().catch(() => {});
+                try {
+                    sounds.collect.pause();
+                    sounds.collect.currentTime = 0;
+                    sounds.collect.volume = sfxVolume;
+                    sounds.collect.play().catch(() => {});
+                } catch (e) {}
             }
             
             // زيادة المستوى كل 1500 نقطة (مراحل أطول وأكثر إثارة)
@@ -709,8 +715,12 @@ function update(deltaTime) {
         if (checkCollision(spaceship, powerUps[i])) {
             applyPowerUp(powerUps[i].type);
             if (!muted) {
-                sounds.collect.currentTime = 0;
-                sounds.collect.play().catch(() => {});
+                try {
+                    sounds.collect.pause();
+                    sounds.collect.currentTime = 0;
+                    sounds.collect.volume = sfxVolume;
+                    sounds.collect.play().catch(() => {});
+                } catch (e) {}
             }
             powerUps.splice(i, 1);
             continue;
@@ -2424,47 +2434,26 @@ let sfxVolume = 0.5;
 
 // إعداد أحداث الصوت عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
-    const muteBtn = document.getElementById('mute-btn');
     const musicVolumeSlider = document.getElementById('music-volume');
     const sfxVolumeSlider = document.getElementById('sfx-volume');
-    
-    if (muteBtn) {
-        muteBtn.addEventListener('click', function() {
-            muted = !muted;
-            muteBtn.textContent = muted ? '🔇 الصوت' : '🔊 الصوت';
-            muteBtn.classList.toggle('muted', muted);
-            
-            if (muted) {
-                sounds.background.pause();
-                Object.keys(sounds).forEach(key => {
-                    sounds[key].volume = 0;
-                });
-            } else {
-                if (gameRunning) {
-                    sounds.background.play().catch(() => {});
-                }
-                sounds.background.volume = musicVolume;
-                Object.keys(sounds).forEach(key => {
-                    if (key !== 'background') {
-                        sounds[key].volume = sfxVolume;
-                    }
-                });
-            }
-        });
-    }
     
     if (musicVolumeSlider) {
         musicVolumeSlider.addEventListener('input', function() {
             musicVolume = this.value / 100;
-            sounds.background.volume = musicVolume;
+            if (sounds.background) {
+                sounds.background.volume = musicVolume;
+                if (!sounds.background.paused && gameRunning) {
+                    sounds.background.play().catch(() => {});
+                }
+            }
         });
     }
     
     if (sfxVolumeSlider) {
         sfxVolumeSlider.addEventListener('input', function() {
             sfxVolume = this.value / 100;
-            Object.keys(sounds).forEach(key => {
-                if (key !== 'background') {
+            ['explosion', 'collect', 'shoot'].forEach(key => {
+                if (sounds[key]) {
                     sounds[key].volume = sfxVolume;
                 }
             });
