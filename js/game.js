@@ -438,11 +438,11 @@ function moveSpaceshipToTouch(touchX, touchY) {
     
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     
-    if (distance > 10 && distance < 100) {
-        spaceship.movingLeft = deltaX < -10;
-        spaceship.movingRight = deltaX > 10;
-        spaceship.movingUp = deltaY < -10;
-        spaceship.movingDown = deltaY > 10;
+    if (distance > 5 && distance < 100) {
+        spaceship.movingLeft = deltaX < -5;
+        spaceship.movingRight = deltaX > 5;
+        spaceship.movingUp = deltaY < -5;
+        spaceship.movingDown = deltaY > 5;
     } else {
         spaceship.movingLeft = false;
         spaceship.movingRight = false;
